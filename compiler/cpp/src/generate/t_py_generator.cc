@@ -672,12 +672,8 @@ void t_py_generator::generate_py_struct_definition(ofstream& out,
     indent(out) << " ]" << endl << endl;
   }
 
-  // TODO(dreiss): Look into generating an empty tuple instead of None
-  // for structures with no members.
-  // TODO(dreiss): Test encoding of structs where some inner structs
-  // don't have thrift_spec.
   if (sorted_members.empty() || (sorted_members[0]->get_key() >= 0)) {
-    indent(out) << "thrift_spec = (" << endl;
+    indent(out) << "struct_defaults = (" << endl;
     indent_up();
 
     int sorted_keys_pos = 0;
@@ -687,10 +683,7 @@ void t_py_generator::generate_py_struct_definition(ofstream& out,
         indent(out) << "None, # " << sorted_keys_pos << endl;
       }
 
-      indent(out) << "(" << (*m_iter)->get_key() << ", " << type_to_enum((*m_iter)->get_type())
-                  << ", "
-                  << "'" << (*m_iter)->get_name() << "'"
-                  << ", " << type_to_spec_args((*m_iter)->get_type()) << ", "
+      indent(out) << "(" << (*m_iter)->get_key() << ", "
                   << render_field_default_value(*m_iter) << ", "
                   << "),"
                   << " # " << sorted_keys_pos << endl;
@@ -701,8 +694,10 @@ void t_py_generator::generate_py_struct_definition(ofstream& out,
     indent_down();
     indent(out) << ")" << endl << endl;
   } else {
-    indent(out) << "thrift_spec = None" << endl;
+    indent(out) << "struct_defaults = None" << endl;
   }
+
+  indent(out) << "thrift_spec = None" << endl;
 
   if (members.size() > 0) {
     out << indent() << "def __init__(self,";
@@ -721,7 +716,7 @@ void t_py_generator::generate_py_struct_definition(ofstream& out,
       t_type* type = (*m_iter)->get_type();
       if (!type->is_base_type() && !type->is_enum() && (*m_iter)->get_value() != NULL) {
         indent(out) << "if " << (*m_iter)->get_name() << " is "
-                    << "self.thrift_spec[" << (*m_iter)->get_key() << "][4]:" << endl;
+                    << "self.struct_defaults[" << (*m_iter)->get_key() << "][1]:" << endl;
         indent(out) << "  " << (*m_iter)->get_name() << " = " << render_field_default_value(*m_iter)
                     << endl;
       }
@@ -2280,7 +2275,7 @@ string t_py_generator::declare_argument(t_field* tfield) {
   std::ostringstream result;
   result << tfield->get_name() << "=";
   if (tfield->get_value() != NULL) {
-    result << "thrift_spec[" << tfield->get_key() << "][4]";
+    result << "struct_defaults[" << tfield->get_key() << "][1]";
   } else {
     result << "None";
   }
