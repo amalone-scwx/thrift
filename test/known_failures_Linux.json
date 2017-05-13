@@ -306,9 +306,5 @@
   "rs-cpp_multic-compact_buffered-ip",
   "rs-cpp_multic-compact_framed-ip",
   "rs-cpp_multic_buffered-ip",
-  "rs-cpp_multic_framed-ip",
-  "rs-dart_binary_framed-ip",
-  "rs-dart_compact_framed-ip",
-  "rs-dart_multi-binary_framed-ip",
-  "rs-dart_multic-compact_framed-ip"
+  "rs-cpp_multic_framed-ip"
 ]
