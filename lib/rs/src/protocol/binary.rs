@@ -18,6 +18,7 @@
 use byteorder::{BigEndian, ByteOrder, ReadBytesExt, WriteBytesExt};
 use std::convert::From;
 use try_from::TryFrom;
+use std::io;
 
 use {ProtocolError, ProtocolErrorKind};
 use transport::{TReadTransport, TWriteTransport};
@@ -74,6 +75,35 @@ where
     }
 }
 
+fn read_exact<T>(trans: &mut T, mut buf: &mut [u8]) -> io::Result<()> where T: TReadTransport {
+    info!("ready to read exact with {} {:?}", buf.is_empty(), buf);
+    while !buf.is_empty() {
+        match trans.read(buf) {
+            Ok(0) => {
+                info!("got 0 bytes");
+                break
+            },
+            Ok(n) => {
+                info!("got n={} bytes", n);
+                let tmp = buf; buf = &mut tmp[n..];
+            }
+            Err(ref e) if e.kind() == io::ErrorKind::Interrupted => {
+                info!("was interrupted")
+            }
+            Err(e) => {
+                info!("error {:?}", e);
+                return Err(e)
+            },
+        }
+    }
+    if !buf.is_empty() {
+        Err(io::Error::new(io::ErrorKind::UnexpectedEof,
+                       "failed to fill whole buffer"))
+    } else {
+        Ok(())
+    }
+}
+
 impl<T> TInputProtocol for TBinaryInputProtocol<T>
 where
     T: TReadTransport,
@@ -81,7 +111,7 @@ where
     #[cfg_attr(feature = "cargo-clippy", allow(collapsible_if))]
     fn read_message_begin(&mut self) -> ::Result<TMessageIdentifier> {
         let mut first_bytes = vec![0; 4];
-        self.transport.read_exact(&mut first_bytes[..])?;
+        read_exact(&mut self.transport, &mut first_bytes[..])?;
 
         // the thrift version header is intentionally negative
         // so the first check we'll do is see if the sign bit is set

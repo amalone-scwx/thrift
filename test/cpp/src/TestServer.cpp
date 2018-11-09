@@ -359,7 +359,11 @@ class SecondHandler : public SecondServiceIf
 {
   public:
     void secondtestString(std::string& result, const std::string& thing)
-    { result = "testString(\"" + thing + "\")"; }
+    {
+      printf("testSecondString(%s): call received\n", thing.c_str());
+      result = "testString(\"" + thing + "\")";
+      printf("testSecondString(%s): result set\n", thing.c_str());
+    }
 };
 
 class TestProcessorEventHandler : public TProcessorEventHandler {

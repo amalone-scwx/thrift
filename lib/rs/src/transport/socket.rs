@@ -104,6 +104,7 @@ impl TTcpChannel {
     /// Both send and receive halves are closed, and this instance can no
     /// longer be used to communicate with another endpoint.
     pub fn close(&mut self) -> ::Result<()> {
+        info!("closing this channel");
         self.if_set(|s| s.shutdown(Shutdown::Both))
             .map_err(From::from)
     }
@@ -150,7 +151,19 @@ impl TIoChannel for TTcpChannel {
 
 impl Read for TTcpChannel {
     fn read(&mut self, b: &mut [u8]) -> io::Result<usize> {
-        self.if_set(|s| s.read(b))
+        self.if_set(|s| {
+            info!("tcp channel is set");
+            let r = s.read(b);
+            info!("tcp channel was read from with {:?}", r);
+            r
+        })
+    }
+}
+
+impl Drop for TTcpChannel {
+    fn drop(&mut self) {
+        info!("shutting down {:?}", self);
+        self.stream.as_mut().map(|s| s.shutdown(Shutdown::Both));
     }
 }
 

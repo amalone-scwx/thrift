@@ -24,6 +24,8 @@
 #include <thrift/TApplicationException.h>
 #include <thrift/TProcessor.h>
 #include <boost/tokenizer.hpp>
+#include <iostream>
+
 
 namespace apache {
 namespace thrift {
@@ -154,6 +156,8 @@ public:
     protocol::TMessageType type;
     int32_t seqid;
 
+    std::cout << "invoking multiplexed processor " << this << std::endl;
+
     // Use the actual underlying protocol (e.g. TBinaryProtocol) to read the
     // message header.  This pulls the message "off the wire", which we'll
     // deal with at the end of this method.
@@ -164,6 +168,8 @@ public:
       throw protocol_error(in, out, name, seqid, "Unexpected message type");
     }
 
+    std::cout << "multiplexed processor arguments: " << name << " " << seqid << " " << type << std::endl;
+
     // Extract the service name
     boost::tokenizer<boost::char_separator<char> > tok(name, boost::char_separator<char>(":"));
 
@@ -173,6 +179,7 @@ public:
     // A valid message should consist of two tokens: the service
     // name and the name of the method to call.
     if (tokens.size() == 2) {
+      std::cout << "call for service: " << tokens[0] << std::endl;
       // Search for a processor associated with this service name.
       services_t::iterator it = services.find(tokens[0]);
 

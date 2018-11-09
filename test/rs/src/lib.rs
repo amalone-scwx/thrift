@@ -15,6 +15,9 @@
 // specific language governing permissions and limitations
 // under the License.
 
+#[macro_use]
+extern crate log;
+
 extern crate ordered_float;
 extern crate thrift;
 extern crate try_from;
